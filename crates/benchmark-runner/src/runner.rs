@@ -462,7 +462,9 @@ async fn load_compiled(guest_name: &str, bin_path: Option<&Path>) -> Result<Comp
         });
     }
 
-    if guest_name.starts_with("stateless-validator-zilkworm") {
+    if guest_name.starts_with("stateless-validator-zilkworm")
+        && !guest_name.starts_with("stateless-validator-zilkworm-stateless")
+    {
         let tag = env!("ZILKWORM_GUEST_TAG");
         anyhow::ensure!(
             !tag.is_empty(),

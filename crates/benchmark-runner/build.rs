@@ -87,6 +87,18 @@ fn main() {
         "local".to_string()
     };
     println!("cargo:rustc-env=ZILKWORM_EL_VERSION={zilkworm_version}");
+
+    // zilkworm-stateless is a local path dep; version = crate version from Cargo.lock.
+    let zilkworm_stateless_version = find_local_crate_version(packages, "z6ms_stateless_validator")
+        .unwrap_or_else(|| "local".to_string());
+    println!("cargo:rustc-env=ZILKWORM_STATELESS_EL_VERSION={zilkworm_stateless_version}");
+}
+
+fn find_local_crate_version(packages: &[toml::Value], pkg_name: &str) -> Option<String> {
+    packages
+        .iter()
+        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some(pkg_name))
+        .and_then(|p| p.get("version").and_then(|v| v.as_str()).map(str::to_owned))
 }
 
 fn find_zilkworm_git_ref(packages: &[toml::Value]) -> (String, String, String) {

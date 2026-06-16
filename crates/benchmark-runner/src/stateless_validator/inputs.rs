@@ -18,6 +18,7 @@ use ere_guests_stateless_validator_reth::guest::{
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use stateless_validator_zilkworm::StatelessValidatorZilkwormInput;
+use stateless_validator_zilkworm_stateless::ZilkwormStatelessInput;
 use tracing::info;
 use witness_generator::StatelessValidationFixture;
 
@@ -42,11 +43,12 @@ pub(crate) fn stateless_validator_input_from_fixture(
             ExecutionClient::Reth => reth_input_from_fixture(*fixture),
             ExecutionClient::Ethrex => ethrex_input_from_fixture(*fixture),
             ExecutionClient::Zilkworm => zilkworm_input_from_fixture(*fixture),
+            ExecutionClient::ZilkwormStateless => zilkworm_stateless_input_from_fixture(*fixture),
         },
         BenchmarkFixture::Eest(fixture) => match el {
             ExecutionClient::Reth | ExecutionClient::Ethrex => raw_eest_input_from_fixture(fixture),
-            ExecutionClient::Zilkworm => {
-                bail!("EEST fixture format not yet supported for Zilkworm")
+            ExecutionClient::Zilkworm | ExecutionClient::ZilkwormStateless => {
+                bail!("EEST fixture format not yet supported for Zilkworm / ZilkwormStateless")
             }
         },
     }
@@ -147,6 +149,56 @@ impl GuestFixture for ZilkwormGuestFixture {
         out.extend_from_slice(&1u32.to_le_bytes());
         out.extend_from_slice(&self.metadata.block_used_gas.to_le_bytes());
         Ok(out)
+    }
+}
+
+fn zilkworm_stateless_input_from_fixture(
+    fixture: StatelessValidationFixture,
+) -> Result<Box<dyn GuestFixture>> {
+    let StatelessValidationFixture {
+        name,
+        stateless_input,
+        success,
+    } = fixture;
+    info!("Preparing ZilkwormStateless input for fixture {name}");
+    let input = ZilkwormStatelessInput::new(&stateless_input, success)
+        .with_context(|| format!("building ZilkwormStateless input for {name}"))?;
+    let metadata = BlockMetadata {
+        block_used_gas: stateless_input.block.gas_used,
+    };
+
+    let expected_public_values = input.expected_public_values();
+    Ok(Box::new(ZilkwormStatelessGuestFixture {
+        name,
+        ssz_bytes: input.ssz_bytes,
+        expected_public_values,
+        metadata,
+    }))
+}
+
+#[derive(Debug)]
+struct ZilkwormStatelessGuestFixture {
+    name: String,
+    ssz_bytes: Vec<u8>,
+    expected_public_values: Vec<u8>,
+    metadata: BlockMetadata,
+}
+
+impl GuestFixture for ZilkwormStatelessGuestFixture {
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn metadata(&self) -> serde_json::Value {
+        serde_json::to_value(&self.metadata).unwrap()
+    }
+
+    fn input(&self) -> Result<Input> {
+        Ok(Input::new().with_stdin(self.ssz_bytes.clone()))
+    }
+
+    fn expected_public_values(&self) -> Result<Vec<u8>> {
+        Ok(self.expected_public_values.clone())
     }
 }
 

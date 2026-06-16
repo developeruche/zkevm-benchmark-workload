@@ -1412,6 +1412,7 @@ dependencies = [
  "walkdir",
  "witness-generator",
  "z6m_stateless_validator",
+ "z6ms_stateless_validator",
  "zkevm-metrics",
 ]
 
@@ -11574,6 +11575,19 @@ source = "git+https://github.com/erigontech/zilkworm?tag=v0.1.0-alpha.2-ere#9c38
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
+]
+
+[[package]]
+name = "z6ms_stateless_validator"
+version = "0.1.0"
+dependencies = [
+ "alloy-consensus",
+ "alloy-primitives",
+ "alloy-rlp",
+ "alloy-trie",
+ "anyhow",
+ "sha2",
+ "stateless",
 ]
 
 [[package]]

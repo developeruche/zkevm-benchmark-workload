@@ -20,8 +20,11 @@ pub enum ExecutionClient {
     Reth,
     /// Ethrex stateless block validation guest program.
     Ethrex,
-    /// Zilkworm stateless block validation guest program.
+    /// Zilkworm (upstream, non-spec-compliant) stateless block validation guest program.
     Zilkworm,
+    /// Zilkworm-stateless (spec-compliant SSZ) stateless block validation guest program.
+    #[strum(serialize = "zilkworm-stateless")]
+    ZilkwormStateless,
 }
 
 /// Extra information about the block being benchmarked
@@ -39,6 +42,7 @@ impl ExecutionClient {
             Self::Reth => env!("RETH_EL_VERSION"),
             Self::Ethrex => env!("ETHREX_EL_VERSION"),
             Self::Zilkworm => env!("ZILKWORM_EL_VERSION"),
+            Self::ZilkwormStateless => env!("ZILKWORM_STATELESS_EL_VERSION"),
         }
     }
 }
